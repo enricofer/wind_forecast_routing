@@ -39,12 +39,14 @@ from qgis.core import (QgsProcessing,
                        QgsVectorLayer,
                        QgsField,
                        QgsFields,
+                       QgsRectangle,
                        QgsFeature,
                        QgsGeometry,
                        QgsWkbTypes,
                        QgsInterval,
                        QgsPointXY,
                        QgsProcessingAlgorithm,
+                       QgsProcessingParameterPoint,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterMeshLayer,
                        QgsProcessingParameterNumber,
@@ -67,6 +69,7 @@ class in_sea_checker:
     def __init__(self,domain_extent=None):
 
         global_oceans_layer_file = os.path.join(os.path.dirname(__file__),"ne_10m_ocean.zip")
+        print ("global_oceans_layer_file", global_oceans_layer_file, domain_extent)
         if domain_extent:
             alg_params = {
                 "INPUT": global_oceans_layer_file,
@@ -83,7 +86,7 @@ class in_sea_checker:
         else:
             self.sea_layer = QgsVectorLayer(local_sea_layer_file, "sea", 'ogr')
         
-        print ("SEA_LAYER", self.sea_layer)
+        print ("SEA_LAYER", self.sea_layer, self.sea_layer.isValid())
 
         for feat in self.sea_layer.getFeatures():
             sea_feat = feat
@@ -101,8 +104,6 @@ class in_sea_checker:
         res = self.sea_geom.contains(p)
         #delay = datetime.now() - start_t
         #print ("in_sea sample delay:", delay.total_seconds())
-        if not res:
-            print("path out of sea")
         return res
         #return True
 
@@ -179,9 +180,10 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
     OUTPUT_ROUTE = 'OUTPUT_ROUTE'
     GRIB = 'GRIB'
     WIND_DATASET_INDEX = 'WIND_DATASET_INDEX'
-    TRACK = 'TRACK'
+    START_POINT = 'START_POINT'
+    END_POINT = 'END_POINT'
     POLAR = 'POLAR'
-    START = 'START'
+    START_TIME = 'START_TIME'
 
     def initAlgorithm(self, config):
         """
@@ -203,8 +205,9 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterMeshLayer(self.GRIB, self.tr('Grib layer')))
         self.addParameter(QgsProcessingParameterNumber(self.WIND_DATASET_INDEX, self.tr('Wind Grib Dataset index')))
         self.addParameter(QgsProcessingParameterEnum(self.POLAR, 'Polar (Courtesy of seapilot.com)', options=self.polar_names, defaultValue=None, allowMultiple=False))
-        self.addParameter(QgsProcessingParameterFeatureSource(self.TRACK, self.tr('Track layer'), [QgsProcessing.TypeVectorLine]))
-        self.addParameter(QgsProcessingParameterDateTime(self.START, self.tr('Time of departure')))
+        self.addParameter(QgsProcessingParameterPoint(self.START_POINT, self.tr('Start point')))
+        self.addParameter(QgsProcessingParameterPoint(self.END_POINT, self.tr('End point')))
+        self.addParameter(QgsProcessingParameterDateTime(self.START_TIME, self.tr('Time of departure')))
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
         # algorithm is run in QGIS).
@@ -228,32 +231,28 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         grib_layerfile = self.parameterAsFile(parameters, self.GRIB, context)
         grib_layer = self.parameterAsLayer(parameters, self.GRIB, context)
         wind_ds = self.parameterAsInt(parameters, self.WIND_DATASET_INDEX, context)
-        track_layer = self.parameterAsSource(parameters, self.TRACK, context)
         polar_filename = self.polar_names[self.parameterAsEnum(parameters, self.POLAR, context)]
-        print ("polar_filename", polar_filename)
         polar = Polar(os.path.join(self.polars_dir,self.polars[polar_filename]))
-        start = self.parameterAsDateTime(parameters, self.START, context)
+        start = self.parameterAsDateTime(parameters, self.START_TIME, context)
+        start_point = self.parameterAsPoint(parameters, self.START_POINT, context)
+        end_point = self.parameterAsPoint(parameters, self.END_POINT, context)
 
         print ("grib_layerfile", grib_layerfile)
         print ("grib_layer", grib_layer)
         print ("wind_ds", wind_ds)
-        print ("track_layer", track_layer)
         print ("polar", polar)
 
-        track = []
-        for trackfeat in track_layer.getFeatures():
-            break#take only 1st feat
-        for v in trackfeat.geometry().vertices():
-            track.append((v.y(),v.x())) #latLon?
+        track = ((start_point.y(), start_point.x()), (end_point.y(), end_point.x()))
 
-        checkValidity = in_sea_checker(trackfeat.geometry().boundingBox())
+        checkValidity = in_sea_checker(QgsRectangle(start_point.x(),start_point.y(), end_point.x(),end_point.y()))
         grib_reader = grib_sampler(grib_layer,wind_ds)
+
         #test
         #print ("TESTGRIB",grib_reader.getWindAt(datetime.strptime("02/02/21 18:00", "%d/%m/%y %H:%M"),39.31064,5.06086))
 
         print ("track", track)
 
-        route_process =  Routing(LinearBestIsoRouter, polar, track, grib_reader, checkValidity.point_in_sea_xy, start.toPyDateTime())
+        route_process =  Routing(LinearBestIsoRouter, polar, track, grib_reader, checkValidity.path_in_sea_xy, start.toPyDateTime())
         step = 1
         while not route_process.end:
             if feedback.isCanceled():

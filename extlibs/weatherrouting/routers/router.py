@@ -90,8 +90,8 @@ class Router:
 				
 				if utils.pointDistance (ptoiso[0], ptoiso[1], nextwp[0], nextwp[1]) >= utils.pointDistance (p[0], p[1], nextwp[0], nextwp[1]):
 				 	continue
-				if not self.pointValidity (ptoiso[0], ptoiso[1]):
-				#if not self.pointValidity (p[0],p[1],ptoiso[0], ptoiso[1]):
+				#if not self.pointValidity (ptoiso[0], ptoiso[1]):
+				if not self.pointValidity (p[0],p[1],ptoiso[0], ptoiso[1]):
 					continue
 				
 				newisopoints.append ((ptoiso[0], ptoiso[1], i, t, twd, tws, speed, math.degrees(brg)))
