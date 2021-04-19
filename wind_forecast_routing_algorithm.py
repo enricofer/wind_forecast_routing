@@ -234,8 +234,8 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         polar_filename = self.polar_names[self.parameterAsEnum(parameters, self.POLAR, context)]
         polar = Polar(os.path.join(self.polars_dir,self.polars[polar_filename]))
         start = self.parameterAsDateTime(parameters, self.START_TIME, context)
-        start_point = self.parameterAsPoint(parameters, self.START_POINT, context)
-        end_point = self.parameterAsPoint(parameters, self.END_POINT, context)
+        start_point = self.parameterAsPoint(parameters, self.START_POINT, context, crs=grib_layer.crs())
+        end_point = self.parameterAsPoint(parameters, self.END_POINT, context, crs=grib_layer.crs())
 
         print ("grib_layerfile", grib_layerfile)
         print ("grib_layer", grib_layer)
