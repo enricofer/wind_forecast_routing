@@ -69,7 +69,6 @@ class in_sea_checker:
     def __init__(self,domain_extent=None):
 
         global_oceans_layer_file = os.path.join(os.path.dirname(__file__),"ne_10m_ocean.zip")
-        print ("global_oceans_layer_file", global_oceans_layer_file, domain_extent)
         if domain_extent:
             alg_params = {
                 "INPUT": global_oceans_layer_file,
@@ -79,14 +78,10 @@ class in_sea_checker:
             }
             print (alg_params)
             output_clip = processing.run('native:extractbyextent', alg_params)
-            print ("clipoutput", output_clip)
-            print ("clipoutput", QgsProject.instance().mapLayers())
             QgsProject.instance().addMapLayer(output_clip['OUTPUT'])
             self.sea_layer = output_clip['OUTPUT']
         else:
             self.sea_layer = QgsVectorLayer(local_sea_layer_file, "sea", 'ogr')
-        
-        print ("SEA_LAYER", self.sea_layer, self.sea_layer.isValid())
 
         for feat in self.sea_layer.getFeatures():
             sea_feat = feat
@@ -243,8 +238,10 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         print ("polar", polar)
 
         track = ((start_point.y(), start_point.x()), (end_point.y(), end_point.x()))
-
-        checkValidity = in_sea_checker(QgsRectangle(start_point.x(),start_point.y(), end_point.x(),end_point.y()))
+        geo_context = QgsRectangle(start_point.x(),start_point.y(), end_point.x(),end_point.y())
+        track_dist = QgsPointXY(start_point.x(),start_point.y()).sqrDist(end_point.x(), end_point.y())
+        geo_context.grow( (track_dist/2 ) if track_dist < 1 else 0.5 ) #limit grow to 0.5 degree
+        checkValidity = in_sea_checker(geo_context)
         grib_reader = grib_sampler(grib_layer,wind_ds)
 
         #test
