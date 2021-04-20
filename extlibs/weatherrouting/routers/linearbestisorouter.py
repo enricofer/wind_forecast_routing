@@ -36,7 +36,7 @@ class LinearBestIsoRouter (Router):
 			if distance_to_end_point < self.getParamValue('minIncrease'):
 				(twd,tws) = self.grib.getWindAt (time + datetime.timedelta(hours=1), p[0], p[1])
 				maxReachDistance, maxspeed = self.polar.maxReachDistance(p, twd, tws)
-				if utils.pointDistance (end[0],end[1], p[0], p[1]) < maxReachDistance*1.1:
+				if utils.pointDistance (end[0],end[1], p[0], p[1]) < abs(maxReachDistance*1.1):
 					print ("LinearBestIsoRouter",utils.pointDistance (end[0],end[1], p[0], p[1]), time + datetime.timedelta(hours=1),maxspeed, maxReachDistance, twd, tws)
 					if self.pointValidity or self.lineValidity(end[0],end[1], p[0], p[1]):
 						path.append (p)
