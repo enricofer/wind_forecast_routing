@@ -249,7 +249,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
 
         print ("track", track)
 
-        route_process =  Routing(LinearBestIsoRouter, polar, track, grib_reader, checkValidity.path_in_sea_xy, start.toPyDateTime())
+        route_process =  Routing(LinearBestIsoRouter, polar, track, grib_reader, start.toPyDateTime(), lineValidity = checkValidity.path_in_sea_xy,)
         step = 1
         while not route_process.end:
             if feedback.isCanceled():
