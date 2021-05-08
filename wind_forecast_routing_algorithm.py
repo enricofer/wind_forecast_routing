@@ -251,6 +251,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
 
         route_process =  Routing(LinearBestIsoRouter, polar, track, grib_reader, start.toPyDateTime(), lineValidity = checkValidity.path_in_sea_xy,)
         step = 1
+        execution = "ok"
         while not route_process.end:
             if feedback.isCanceled():
                 break
@@ -258,21 +259,13 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
                 res = route_process.step()
                 step += 1
                 feedback.pushInfo("step %d: %s" % (step, str(res.time)))
-                if res.time > grib_reader.end_time:
-                    return {"error": "out of grib temporal scope"}
                 if feedback.isCanceled():
-                    return {}
+                    return {"result":"terminated by user"}
+                if res.time > grib_reader.end_time:
+                    execution = "terminated: out of grib temporal scope"
             except Exception as e:
-                print (e)
-        print ("time", res.time)
-        print ("path", res.path)
-        #print ("isocrones",res.isochrones)
-        #print ("position",route_process.step().position)
-        #print ("progress",route_process.step().progress)
+                feedback.pushInfo("Error: %s" % e.message)
 
-        # Retrieve the feature source and sink. The 'dest_id' variable is used
-        # to uniquely identify the feature sink, and must be included in the
-        # dictionary returned by the processAlgorithm function.
         if res.path:
             waypfields = QgsFields()
             waypfields.append(QgsField("wayp_id", QVariant.Int))
@@ -299,7 +292,8 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
                     tr.append((wp[0], wp[1], str(wp[2]), 0, 0, 0, 0))
                 else:
                     tr.append((wp[0], wp[1], str(wp[4]), wp[5], wp[6], wp[7], wp[8]))
-            tr.append((*track[-1], dateutil.parser.parse(tr[-1][2])+timedelta(hours=1), 0, 0, 0, 0))
+            if execution == "ok":
+                tr.append((*track[-1], dateutil.parser.parse(tr[-1][2])+timedelta(hours=1), 0, 0, 0, 0))
             
             print (tr)
             route_polyline = []
@@ -333,7 +327,8 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
 
             return {
                 self.OUTPUT_WAYPOINTS: dest_waypoints_id,
-                self.OUTPUT_ROUTE: dest_route_id
+                self.OUTPUT_ROUTE: dest_route_id,
+                "result": execution
             }
         else:
             return {"result", "no_path"}
