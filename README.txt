@@ -1,26 +1,10 @@
-Plugin Builder Results
+# Wind forecast routing
 
-Your plugin windForecastRouting was created in:
-    D:/Documenti/04_CLOUD/dev/qgis3\wind_forecast_routing
-
-Your QGIS plugin directory is located at:
-    C:/Users/ferregutie/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
-
-What's Next:
-
-  * Copy the entire directory containing your new plugin to the QGIS plugin
-    directory
-
-  * Run the tests (``make test``)
-
-  * Test the plugin by enabling it in the QGIS plugin manager
-
-  * Customize it by editing the implementation file: ``wind_forecast_routing.py``
-
-  * You can use the Makefile to compile your Ui and resource files when
-    you make changes. This requires GNU make (gmake)
-
-For more information, see the PyQGIS Developer Cookbook at:
-http://www.qgis.org/pyqgis-cookbook/index.html
-
-(C) 2011-2018 GeoApt LLC - geoapt.com
+To generate an optimal route:
+* download a GRIB file, e.g. using https://plugins.qgis.org/plugins/gribdownloader/
+ * suggested parameters: model from `ICON_EU`, interval 1 (1 hour), period 5
+ * better if you dowload only the needed layer (wind)
+* check that the GRIB has the correct projection (EPSG:4326); if not, assign it by hand
+* if you downloaded only wind, the param `Wind Grib Dataset index` should be set at 0; if not, please check which one contains the wind, using `Layer>Properties>Source>Datasets` (the first one has index 0
+* if your layer is not shown, deactivate the time panel
+* doble check that your start and end point fall outside land masses; currently the plugin uses a rough coastline (natural earth `ne_10m_ocean`, you can find it in the plugin source directory)
