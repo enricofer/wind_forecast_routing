@@ -10,10 +10,10 @@ version=0.1
 author=enrico ferreguti
 email=enricofer@gmail.com
 
-about=Provide a brief description of the plugin and its purpose.
+about=A routing method to plan sailing based on wind speed and direction, and specific performances of a boat.
 
-tracker=http://bugs
-repository=http://repo
+tracker=https://github.com/enricofer/wind_forecast_routing/issues
+repository=https://github.com/enricofer/wind_forecast_routing
 # End of mandatory metadata
 
 # Recommended items:
@@ -25,7 +25,7 @@ hasProcessingProvider=yes
 # Tags are comma separated with spaces allowed
 tags=python
 
-homepage=http://homepage
+homepage=https://github.com/enricofer/wind_forecast_routing
 category=Analysis
 icon=icon.png
 # experimental flag
