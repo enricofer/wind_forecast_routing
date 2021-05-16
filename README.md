@@ -1,4 +1,5 @@
 # Wind forecast routing
+The plugin is based on [libweatherrouting routing library](https://github.com/dakk/libweatherrouting/) ©2021 Davide Gessa, Riccardo Apolloni, Enrico Ferreguti
 
 To generate an optimal route:
 * download a GRIB file, e.g. using https://plugins.qgis.org/plugins/gribdownloader/
