@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) 2017-2021 Davide Gessa
+# Copyright (C) 2021 Enrico Ferreguti
 # Copyright (C) 2012 Riccardo Apolloni
 '''
 This program is free software: you can redistribute it and/or modify
@@ -170,8 +171,9 @@ class Polar:
 		return twa
 
 		
-	def maxReachDistance(self,p,twd,tws):
+	def maxReachDistance(self, p, twd, tws, speed = None):
 		dt = (1. / 60. * 60.)
-		speed = self.getRoutageSpeed (tws, math.copysign (twd,1))
-		maxp = utils.routagePointDistance (p[0], p[1], speed*dt*1.85, 1)
+		if speed == None:
+			speed = self.getRoutageSpeed (tws, math.copysign (twd,1)) * utils.NAUTICAL_MILE_IN_KM
+		maxp = utils.routagePointDistance (p[0], p[1], speed * dt, 1)
 		return utils.pointDistance(p[0], p[1], maxp[0], maxp[1])
