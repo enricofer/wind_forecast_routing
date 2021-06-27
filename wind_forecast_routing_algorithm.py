@@ -355,7 +355,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         Returns the name of the group this algorithm belongs to. This string
         should be localised.
         """
-        return self.tr(self.groupId())
+        return self.tr('Sail tools')
 
     def groupId(self):
         """
@@ -365,7 +365,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'sail tools'
+        return 'sailtools'
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)

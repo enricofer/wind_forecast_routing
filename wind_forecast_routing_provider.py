@@ -36,6 +36,7 @@ from qgis.PyQt.QtGui import (
 
 from qgis.core import QgsProcessingProvider
 from .wind_forecast_routing_algorithm import windForecastRoutingAlgorithm
+from .wind_forecast_routing_launch import windForecastLaunchAlgorithm
 
 import os
 
@@ -59,6 +60,7 @@ class windForecastRoutingProvider(QgsProcessingProvider):
         Loads all algorithms belonging to this provider.
         """
         self.addAlgorithm(windForecastRoutingAlgorithm())
+        self.addAlgorithm(windForecastLaunchAlgorithm())
         # add additional algorithms here
         # self.addAlgorithm(MyOtherAlgorithm())
 
@@ -68,7 +70,7 @@ class windForecastRoutingProvider(QgsProcessingProvider):
         string should be a unique, short, character only string, eg "qgis" or
         "gdal". This string should not be localised.
         """
-        return 'sailTools'
+        return 'sailtools'
 
     def name(self):
         """
@@ -77,7 +79,7 @@ class windForecastRoutingProvider(QgsProcessingProvider):
 
         This string should be short (e.g. "Lastools") and localised.
         """
-        return self.tr('sailTools')
+        return self.tr('Sail tools')
 
     def icon(self):
         """
