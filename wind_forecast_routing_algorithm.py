@@ -64,6 +64,20 @@ import os
 from datetime import datetime, timedelta
 import dateutil
 
+def get_routing_fields():
+    waypfields = QgsFields()
+    waypfields.append(QgsField("wayp_id", QVariant.Int))
+    waypfields.append(QgsField("timestamp", QVariant.String,len=25))
+    waypfields.append(QgsField("time", QVariant.DateTime)) 
+    waypfields.append(QgsField("twd", QVariant.Double,len=10,prec=3)) 
+    waypfields.append(QgsField("tws", QVariant.Double,len=10,prec=3)) 
+    waypfields.append(QgsField("knots", QVariant.Double,len=10,prec=3)) 
+    waypfields.append(QgsField("heading", QVariant.Double,len=10,prec=3)) 
+    routefields = QgsFields()
+    routefields.append(QgsField("start_tracking", QVariant.String,len=25))
+    routefields.append(QgsField("end_tracking", QVariant.String,len=25))
+    return waypfields,routefields
+
 class in_sea_checker:
     
     def __init__(self,domain_extent=None):
@@ -150,7 +164,7 @@ class grib_sampler(Grib):
             tws = wind_value.scalar()#*1.943844
             return (twd,tws)
         else:
-            print ("OUT_OF_RANGE")
+            print ("OUT_OF_RANGE", t, self.start_time, self.end_time)
             return None
 
 class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
@@ -209,13 +223,19 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.OUTPUT_WAYPOINTS,
-                self.tr('Waypoints Output layer')
+                self.tr('Waypoints Output layer'), 
+                QgsProcessing.TypeVectorPoint,
+                None, 
+                True
             )
         )
         self.addParameter(
             QgsProcessingParameterFeatureSink(
                 self.OUTPUT_ROUTE,
-                self.tr('Route Output layer')
+                self.tr('Route Output layer'), 
+                QgsProcessing.TypeVectorLine,
+                None, 
+                True
             )
         )
 
@@ -225,6 +245,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         """
         grib_layerfile = self.parameterAsFile(parameters, self.GRIB, context)
         grib_layer = self.parameterAsLayer(parameters, self.GRIB, context)
+        print ("GRIB DETAILS:", grib_layerfile, grib_layer, grib_layer.id())
         wind_ds = self.parameterAsInt(parameters, self.WIND_DATASET_INDEX, context)
         polar_filename = self.polar_names[self.parameterAsEnum(parameters, self.POLAR, context)]
         polar = Polar(os.path.join(self.polars_dir,self.polars[polar_filename]))
@@ -232,10 +253,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         start_point = self.parameterAsPoint(parameters, self.START_POINT, context, crs=grib_layer.crs())
         end_point = self.parameterAsPoint(parameters, self.END_POINT, context, crs=grib_layer.crs())
 
-        print ("grib_layerfile", grib_layerfile)
-        print ("grib_layer", grib_layer)
-        print ("wind_ds", wind_ds)
-        print ("polar", polar)
+        print ("parameters", parameters)
 
         track = ((start_point.y(), start_point.x()), (end_point.y(), end_point.x()))
         geo_context = QgsRectangle(start_point.x(),start_point.y(), end_point.x(),end_point.y())
@@ -267,17 +285,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
                 feedback.pushInfo("Error: %s" % e.message)
 
         if res.path:
-            waypfields = QgsFields()
-            waypfields.append(QgsField("wayp_id", QVariant.Int))
-            waypfields.append(QgsField("timestamp", QVariant.String,len=25))
-            waypfields.append(QgsField("time", QVariant.DateTime)) 
-            waypfields.append(QgsField("twd", QVariant.Double,len=10,prec=3)) 
-            waypfields.append(QgsField("tws", QVariant.Double,len=10,prec=3)) 
-            waypfields.append(QgsField("knots", QVariant.Double,len=10,prec=3)) 
-            waypfields.append(QgsField("heading", QVariant.Double,len=10,prec=3)) 
-            routefields = QgsFields()
-            routefields.append(QgsField("start_tracking", QVariant.String,len=25))
-            routefields.append(QgsField("end_tracking", QVariant.String,len=25))
+            waypfields, routefields = get_routing_fields()
 
             (sink_waypoints, dest_waypoints_id) = self.parameterAsSink(parameters, self.OUTPUT_WAYPOINTS,
                     context, waypfields, QgsWkbTypes.Point, QgsCoordinateReferenceSystem(4326))
@@ -317,7 +325,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
                 route_polyline.append(waypoint)
                 new_geom = QgsGeometry.fromPointXY(waypoint)
                 new_feat.setGeometry(new_geom)
-                sink_waypoints.addFeature(new_feat, QgsFeatureSink.FastInsert)
+                print ("write sink_waypoints:",sink_waypoints.addFeature(new_feat, QgsFeatureSink.FastInsert))
 
             new_route_feat = QgsFeature(routefields)
             new_route_feat.setAttribute('start_tracking', tr[0][2][:25])

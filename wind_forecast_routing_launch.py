@@ -40,6 +40,7 @@ from qgis.core import (QgsProcessing,
                        QgsCoordinateReferenceSystem,
                        QgsFeatureSink,
                        QgsMeshLayer,
+                       QgsMeshDatasetIndex,
                        QgsProject,
                        QgsNetworkAccessManager,
                        QgsVectorLayer,
@@ -69,6 +70,65 @@ from datetime import datetime, timedelta
 import dateutil
 import requests
 
+wind_models = [
+    {
+        "service": 'icon_p25_',
+        "context": "Global - ICON",
+        "interval": '3',
+        "days": '5',
+        "limits": None
+    },
+    {
+        "service": 'gfs_p25_',
+        "context": "Global - GFS",
+        "interval": '3',
+        "days": '5',
+        "limits": None
+    },
+    {
+        "service": 'arpege_p50_',
+        "context": "Global - ARPEGE",
+        "interval": '3',
+        "days": '4',
+        "limits": None
+    },
+    {
+        "service": 'arpege_eu_p10_',
+        "context": "Europe - ARPEGE_EU",
+        "interval": '1',
+        "days": '3',
+        "limits": [-32.0, 20.0, 42.0, 72.0]
+    },
+    {
+        "service": 'icon_eu_p06_',
+        "context": "Europe - ICON_EU",
+        "interval": '1',
+        "days": '5',
+        "limits": [-23.5, 29.5, 45.0, 70.5]
+    },
+    {
+        "service": 'nam_conus_12km_',
+        "context": "North America - NAM_CONUS",
+        "interval": '1',
+        "days": '4',
+        "limits": [-152.879, 12.220, -49.416, 61.310]
+    },
+    {
+        "service": 'nam_cacbn_12km_',
+        "context": "Caribbean sea - NAM_CACBN",
+        "interval": '1',
+        "days": '4',
+        "limits": [-100.0, 0.138, -60.148, 30.054]
+    },
+    {
+        "service": 'nam_pacific_12km_',
+        "context": "Pacific ocean - NAM_PACIFIC",
+        "interval": '1',
+        "days": '4',
+        "limits": [-170.0, 8.133, -140.084, 32.973]
+    },
+]
+
 class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
     """
     This is an example algorithm that takes a vector layer and
@@ -94,6 +154,7 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
     GRIB_OUTPUT = 'GRIB_OUTPUT'
     OUTPUT_WAYPOINTS = 'OUTPUT_WAYPOINTS'
     OUTPUT_ROUTE = 'OUTPUT_ROUTE'
+    MODEL = 'MODEL'
 
     def initAlgorithm(self, config):
         """
@@ -110,8 +171,14 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         self.polar_names = list(self.polars.keys())
         self.polar_names.sort()
 
+        wind_models_labels = ["Auto"]
+        for wm in wind_models:
+            wind_models_labels.append(wm["context"])
+
+        print (wind_models_labels)
         # We add the input vector features source. It can have any kind of
         # geometry.
+        self.addParameter(QgsProcessingParameterEnum(self.MODEL, 'Wind Model', options=wind_models_labels, defaultValue=0, allowMultiple=False))
         self.addParameter(QgsProcessingParameterEnum(self.POLAR, 'Polar (Courtesy of seapilot.com)', options=self.polar_names, defaultValue=None, allowMultiple=False))
         self.addParameter(QgsProcessingParameterPoint(self.START_POINT, self.tr('Start point')))
         self.addParameter(QgsProcessingParameterPoint(self.END_POINT, self.tr('End point')))
@@ -150,19 +217,33 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         geo_context = QgsRectangle(start_point.x(),start_point.y(), end_point.x(),end_point.y())
         track_dist = QgsPointXY(start_point.x(),start_point.y()).sqrDist(end_point.x(), end_point.y())
         geo_context.grow( (track_dist/2 ) if track_dist < 1 else 0.5 ) #limit grow to 0.5 degree
-        output_route = self.parameterAsVectorLayer(parameters, self.OUTPUT_ROUTE, context)
-        output_waypoints = self.parameterAsVectorLayer(parameters, self.OUTPUT_WAYPOINTS, context)
+        output_route = self.parameterAsOutputLayer(parameters, self.OUTPUT_ROUTE, context)
+        output_waypoints = self.parameterAsOutputLayer(parameters, self.OUTPUT_WAYPOINTS, context)
 
-        params = {
-            "bottom": geo_context.yMinimum(),
-            "top": geo_context.yMaximum(),
-            "left": geo_context.xMinimum(),
-            "right":geo_context.yMaximum()
-        }
 
-        print (params)
+        model = self.parameterAsEnum(parameters, self.MODEL, context)
+        print (model)
+        wind_model_def = None
+        if model == 0:
+            for wm in wind_models:
+                if wm["limits"]:
+                    wm_extent = QgsRectangle(*wm["limits"])
+                    if wm_extent.contains(geo_context):
+                        wind_model_def = wm
+                        break
+            if not wind_model_def:
+                wind_model_def = wind_models[0]
+        else:
+            wind_model_def = wind_models[model-1]
 
-        url = 'http://grbsrv.opengribs.org/getmygribs2.php/?osys=Unknown&ver=1.2.4&la1={bottom}&la2={top}&lo1={left}&lo2={right}&model=icon_eu_p06_&wmdl=none&intv=1&days=5&cyc=last&par=W%3B&wpar='.format(**params)
+        wind_model_def["bottom"] = geo_context.yMinimum()
+        wind_model_def["top"] = geo_context.yMaximum()
+        wind_model_def["left"] = geo_context.xMinimum()
+        wind_model_def["right"] =geo_context.xMaximum()
+        print (wind_model_def)
+
+        #url = 'http://grbsrv.opengribs.org/getmygribs2.php/?osys=Unknown&ver=1.2.4&la1={bottom}&la2={top}&lo1={left}&lo2={right}&model=icon_eu_p06_&wmdl=none&intv=1&days=5&cyc=last&par=W%3B&wpar='.format(**params)
+        url = 'http://grbsrv.opengribs.org/getmygribs2.php/?osys=Unknown&ver=1.2.4&la1={bottom}&la2={top}&lo1={left}&lo2={right}&model={service}&wmdl=none&intv={interval}&days={days}&cyc=last&par=W%3B&wpar='.format(**wind_model_def)
         print (url)
         manager = QgsNetworkAccessManager.instance()
         request = QNetworkRequest()
@@ -172,28 +253,17 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         replyObject = j.toVariant()
         print (rawReplyObject.content())
         if replyObject["status"]:
-            #mesh_name = QUrl(replyObject["message"]["url"]).fileName()
-            #targetFile = os.path.join(os.path.dirname(__file__),'gribs',mesh_name)
-            #request.setUrl(QUrl(replyObject1["message"]["url"]))
-            #replyObject2 = manager.blockingGet(request)
 
             download_params = {
                 'URL': replyObject["message"]["url"],
                 'OUTPUT': grib_output
             }
 
-            print (download_params)
+            print ("download_params:",download_params)
             output_download = processing.run('native:filedownloader', download_params, context=context, feedback=feedback, is_child_algorithm=True)
-            #with open(targetFile, 'wb') as f:
-            #    f.write(replyObject.content())
-            #self.status_label.setText("Downloaded: "+targetFile)
-            #self.iface.messageBar().clearWidgets()
-            #self.iface.messageBar().pushMessage("QGribDownloader", "Downloaded: " + targetFile, level=Qgis.Success, duration=9999)
-            #meshLayer = QgsMeshLayer(output_download['OUTPUT'], QUrl(replyObject["message"]["url"]).fileName(), "mdal")
-            #QgsProject.instance().addMapLayer(meshLayer)
-            #self.iface.mapCanvas().setDestinationCrs(meshLayer.crs())
         else:
             print ("ERROR", replyObject)
+            return replyObject
 
         routing_params = {
             'START_POINT': start_point,
@@ -202,8 +272,8 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
             'GRIB': output_download['OUTPUT'],
             'WIND_DATASET_INDEX': 0,
             'START_TIME': start_time,
-            'OUTPUT_WAYPOINTS': QgsProcessing.TEMPORARY_OUTPUT,
-            'OUTPUT_ROUTE': QgsProcessing.TEMPORARY_OUTPUT,
+            'OUTPUT_WAYPOINTS': output_waypoints, #QgsProcessing.TEMPORARY_OUTPUT,
+            'OUTPUT_ROUTE': output_route #QgsProcessing.TEMPORARY_OUTPUT,
         }
 
         print (routing_params)
@@ -211,6 +281,22 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         output_routing = processing.run('sailtools:windrouting', routing_params, context=context, feedback=feedback, is_child_algorithm=True)
 
         output_routing[self.GRIB_OUTPUT] = output_download['OUTPUT']
+
+        meshLayer = QgsMeshLayer(output_download['OUTPUT'],"grib",'mdal')
+        dp = meshLayer.dataProvider()
+        gprCount = dp.datasetGroupCount()
+        for i in range(gprCount):
+            meta = dp.datasetGroupMetadata(QgsMeshDatasetIndex(i, 0))
+            isVector = meta.isVector()
+            name = meta.name()
+            if isVector:
+                break
+
+        s = meshLayer.rendererSettings()
+        s.setActiveVectorDatasetGroup(i) #QgsMeshDatasetIndex(i, 0)
+        s.setActiveScalarDatasetGroup(i)
+        meshLayer.setRendererSettings(s)
+        QgsProject.instance().addMapLayer(meshLayer)
 
         return output_routing
 
