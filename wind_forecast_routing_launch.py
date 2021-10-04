@@ -61,6 +61,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterFileDestination,
                        QgsProcessingParameterEnum,
                        QgsProcessingParameterDateTime,
+                       QgsProcessingParameterBoolean,
                        QgsProcessingParameterVectorDestination)
 
 import processing
@@ -155,12 +156,18 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
     OUTPUT_WAYPOINTS = 'OUTPUT_WAYPOINTS'
     OUTPUT_ROUTE = 'OUTPUT_ROUTE'
     MODEL = 'MODEL'
+    FORCE_LOAD_RESULTS = 'FORCE_LOAD_RESULTS'
 
     def initAlgorithm(self, config):
         """
         Here we define the inputs and output of the algorithm, along
         with some other properties.
         """
+        print ("CONFIG LAUNCH", config)
+        if "nooutput" in config:
+            self.allow_output = False
+        else:
+            self.allow_output = True
         #http://jieter.github.io/orc-data/site/
         self.polars_dir = os.path.join(os.path.dirname(__file__),"polar_files")
         self.polars = {}
@@ -187,20 +194,37 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
         # algorithm is run in QGIS).
-        self.addParameter(
-            QgsProcessingParameterVectorDestination(
-                self.OUTPUT_WAYPOINTS,
-                self.tr('Waypoints Output layer'),
-                createByDefault=True
+        if self.allow_output:
+            self.addParameter(
+                QgsProcessingParameterVectorDestination(
+                    self.OUTPUT_WAYPOINTS,
+                    self.tr('Waypoints Output layer'),
+                    createByDefault=True
+                )
             )
-        )
-        self.addParameter(
-            QgsProcessingParameterVectorDestination(
-                self.OUTPUT_ROUTE,
-                self.tr('Route Output layer'),
-                createByDefault=True
+            self.addParameter(
+                QgsProcessingParameterVectorDestination(
+                    self.OUTPUT_ROUTE,
+                    self.tr('Route Output layer'),
+                    createByDefault=True
+                )
             )
-        )
+        else:
+            self.addParameter(
+                QgsProcessingParameterFileDestination(
+                    self.OUTPUT_WAYPOINTS,
+                    self.tr('Waypoints Output vector file'),
+                    createByDefault=True
+                )
+            )
+            self.addParameter(
+                QgsProcessingParameterFileDestination(
+                    self.OUTPUT_ROUTE,
+                    self.tr('Route Output vector file'),
+                    createByDefault=True
+                )
+            )
+
 
     def processAlgorithm(self, parameters, context, feedback):
         """
@@ -217,8 +241,13 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         geo_context = QgsRectangle(start_point.x(),start_point.y(), end_point.x(),end_point.y())
         track_dist = QgsPointXY(start_point.x(),start_point.y()).sqrDist(end_point.x(), end_point.y())
         geo_context.grow( (track_dist/2 ) if track_dist < 1 else 0.5 ) #limit grow to 0.5 degree
-        output_route = self.parameterAsOutputLayer(parameters, self.OUTPUT_ROUTE, context)
-        output_waypoints = self.parameterAsOutputLayer(parameters, self.OUTPUT_WAYPOINTS, context)
+        if self.allow_output:
+            output_route = self.parameterAsOutputLayer(parameters, self.OUTPUT_ROUTE, context)
+            output_waypoints = self.parameterAsOutputLayer(parameters, self.OUTPUT_WAYPOINTS, context)
+        else:
+            output_route = self.parameterAsFileOutput(parameters, self.OUTPUT_ROUTE, context)
+            output_waypoints = self.parameterAsFileOutput(parameters, self.OUTPUT_WAYPOINTS, context)
+        #self.force_load_on_map = self.parameterAsBoolean(parameters, self.FORCE_LOAD_RESULTS, context)
 
 
         model = self.parameterAsEnum(parameters, self.MODEL, context)
@@ -278,9 +307,10 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
 
         print (routing_params)
 
-        output_routing = processing.run('sailtools:windrouting', routing_params, context=context, feedback=feedback, is_child_algorithm=True)
+        self.output_routing = processing.run('sailtools:windrouting', routing_params, context=context, feedback=feedback, is_child_algorithm=True)
 
-        output_routing[self.GRIB_OUTPUT] = output_download['OUTPUT']
+        self.output_routing[self.GRIB_OUTPUT] = output_download['OUTPUT']
+        #output_routing[self.FORCE_LOAD_RESULTS] = force_load_on_map
 
         meshLayer = QgsMeshLayer(output_download['OUTPUT'],"grib",'mdal')
         dp = meshLayer.dataProvider()
@@ -298,7 +328,11 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         meshLayer.setRendererSettings(s)
         QgsProject.instance().addMapLayer(meshLayer)
 
-        return output_routing
+        if not self.force_load_on_map:
+            self.output_routing['OUTPUT_VECTOR'] = [self.output_routing.pop('OUTPUT_WAYPOINTS'), self.output_routing.pop('OUTPUT_ROUTE')]
+
+        return self.output_routing
+
 
     def name(self):
         """

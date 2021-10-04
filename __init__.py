@@ -47,4 +47,4 @@ def classFactory(iface):  # pylint: disable=invalid-name
     """
     #
     from .wind_forecast_routing import windForecastRoutingPlugin
-    return windForecastRoutingPlugin()
+    return windForecastRoutingPlugin(iface)
