@@ -312,25 +312,6 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         self.output_routing[self.GRIB_OUTPUT] = output_download['OUTPUT']
         #output_routing[self.FORCE_LOAD_RESULTS] = force_load_on_map
 
-        meshLayer = QgsMeshLayer(output_download['OUTPUT'],"grib",'mdal')
-        dp = meshLayer.dataProvider()
-        gprCount = dp.datasetGroupCount()
-        for i in range(gprCount):
-            meta = dp.datasetGroupMetadata(QgsMeshDatasetIndex(i, 0))
-            isVector = meta.isVector()
-            name = meta.name()
-            if isVector:
-                break
-
-        s = meshLayer.rendererSettings()
-        s.setActiveVectorDatasetGroup(i) #QgsMeshDatasetIndex(i, 0)
-        s.setActiveScalarDatasetGroup(i)
-        meshLayer.setRendererSettings(s)
-        QgsProject.instance().addMapLayer(meshLayer)
-
-        if not self.force_load_on_map:
-            self.output_routing['OUTPUT_VECTOR'] = [self.output_routing.pop('OUTPUT_WAYPOINTS'), self.output_routing.pop('OUTPUT_ROUTE')]
-
         return self.output_routing
 
 

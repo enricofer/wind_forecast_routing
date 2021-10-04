@@ -38,7 +38,7 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtWidgets import QAction, QMainWindow, QDockWidget, QMenu
 
-from qgis.core import QgsProcessingAlgorithm, QgsApplication
+from qgis.core import QgsProcessingAlgorithm, QgsApplication, QgsProject, QgsMeshLayer, QgsMeshDatasetIndex, QgsVectorLayer, QgsLayerTreeLayer
 from processing import execAlgorithmDialog, createAlgorithmDialog
 from .wind_forecast_routing_provider import windForecastRoutingProvider
 
@@ -197,15 +197,53 @@ class windForecastRoutingPlugin(object):
 
     def unload(self):
         QgsApplication.processingRegistry().removeProvider(self.provider)
-    
-    def ex_launch_routing(self):
-        """Run method that loads and exec the processing algorithm dialog"""
-        params = {} 
-        results = execAlgorithmDialog('sailtools:windroutinglaunch', params)
-        if results:
-            print ("FINAL",results)
+
+    def moveLegendNode(self,source,target):
+        clone = source.clone()
+        target.insertChildNode(0, clone)
+        parent = source.parent()
+        parent.removeChildNode(source)
+        return clone
     
     def launch_routing(self):
+        """Run method that loads and exec the processing algorithm dialog"""
+
+        params = {} 
+        results = execAlgorithmDialog('sailtools:windroutinglaunchnooutput', params)
+        if results:
+            print ("FINAL",results)
+
+            legendRoot = QgsProject.instance().layerTreeRoot()
+            routinggroup = legendRoot.insertGroup(0, "routing_result")
+
+            meshLayer = QgsMeshLayer(results['GRIB_OUTPUT'],"grib",'mdal')
+            dp = meshLayer.dataProvider()
+            gprCount = dp.datasetGroupCount()
+            for i in range(gprCount):
+                meta = dp.datasetGroupMetadata(QgsMeshDatasetIndex(i, 0))
+                isVector = meta.isVector()
+                name = meta.name()
+                if isVector:
+                    break
+
+            s = meshLayer.rendererSettings()
+            s.setActiveVectorDatasetGroup(i) #QgsMeshDatasetIndex(i, 0)
+            s.setActiveScalarDatasetGroup(i)
+            meshLayer.setRendererSettings(s)
+            QgsProject.instance().addMapLayer(meshLayer, False)
+            routinggroup.insertChildNode(0, QgsLayerTreeLayer(meshLayer))
+
+            routelayer = QgsVectorLayer(results['OUTPUT_ROUTE'], "route", "ogr")
+            routelayer.loadNamedStyle(os.path.join(self.plugin_dir,"route.qml"))
+            QgsProject.instance().addMapLayer(routelayer, False)
+            routinggroup.insertChildNode(0, QgsLayerTreeLayer(routelayer))
+
+            waypointslayer = QgsVectorLayer(results['OUTPUT_WAYPOINTS'], "waypoints", "ogr")
+            waypointslayer.loadNamedStyle(os.path.join(self.plugin_dir,"waypoint.qml"))
+            QgsProject.instance().addMapLayer(waypointslayer, False)
+            routinggroup.insertChildNode(0, QgsLayerTreeLayer(waypointslayer))
+    
+    def ex_launch_routing(self):
         """Run method that loads and exec the processing algorithm dialog"""
         params = {} 
         dialog = createAlgorithmDialog('sailtools:windroutinglaunch', params)
