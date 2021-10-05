@@ -46,7 +46,7 @@ class windForecastLaunchNoOutputAlgorithm(windForecastLaunchAlgorithm):
         Returns the translated algorithm name, which should be used for any
         user-visible display of the algorithm name.
         """
-        return 'windrouting launch without output'
+        return 'Wind Routing'
 
     def group(self):
         """

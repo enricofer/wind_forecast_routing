@@ -214,7 +214,7 @@ class windForecastRoutingPlugin(object):
             print ("FINAL",results)
 
             legendRoot = QgsProject.instance().layerTreeRoot()
-            routinggroup = legendRoot.insertGroup(0, "routing_result")
+            routinggroup = legendRoot.insertGroup(0, results["elab_name"])
 
             meshLayer = QgsMeshLayer(results['GRIB_OUTPUT'],"grib",'mdal')
             dp = meshLayer.dataProvider()
@@ -233,6 +233,11 @@ class windForecastRoutingPlugin(object):
             QgsProject.instance().addMapLayer(meshLayer, False)
             routinggroup.insertChildNode(0, QgsLayerTreeLayer(meshLayer))
 
+            contextlayer = QgsVectorLayer(results['OUTPUT_CONTEXT'], "context", "ogr")
+            contextlayer.loadNamedStyle(os.path.join(self.plugin_dir,"context.qml"))
+            QgsProject.instance().addMapLayer(contextlayer, False)
+            routinggroup.insertChildNode(0, QgsLayerTreeLayer(contextlayer))
+
             routelayer = QgsVectorLayer(results['OUTPUT_ROUTE'], "route", "ogr")
             routelayer.loadNamedStyle(os.path.join(self.plugin_dir,"route.qml"))
             QgsProject.instance().addMapLayer(routelayer, False)
@@ -242,6 +247,7 @@ class windForecastRoutingPlugin(object):
             waypointslayer.loadNamedStyle(os.path.join(self.plugin_dir,"waypoint.qml"))
             QgsProject.instance().addMapLayer(waypointslayer, False)
             routinggroup.insertChildNode(0, QgsLayerTreeLayer(waypointslayer))
+
     
     def ex_launch_routing(self):
         """Run method that loads and exec the processing algorithm dialog"""

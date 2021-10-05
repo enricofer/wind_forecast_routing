@@ -38,6 +38,7 @@ from qgis.core import QgsProcessingProvider
 from .wind_forecast_routing_algorithm import windForecastRoutingAlgorithm
 from .wind_forecast_routing_launch import windForecastLaunchAlgorithm
 from .wind_forecast_routing_launch_nooutput import windForecastLaunchNoOutputAlgorithm
+from .inverted_clip_algorithm import Inverted_clip
 
 import os
 
@@ -63,6 +64,7 @@ class windForecastRoutingProvider(QgsProcessingProvider):
         self.addAlgorithm(windForecastRoutingAlgorithm())
         self.addAlgorithm(windForecastLaunchAlgorithm())
         self.addAlgorithm(windForecastLaunchNoOutputAlgorithm())
+        self.addAlgorithm(Inverted_clip())
         # add additional algorithms here
         # self.addAlgorithm(MyOtherAlgorithm())
 
