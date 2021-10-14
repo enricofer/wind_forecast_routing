@@ -191,7 +191,7 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterPoint(self.START_POINT, self.tr('Start point')))
         self.addParameter(QgsProcessingParameterPoint(self.END_POINT, self.tr('End point')))
         self.addParameter(QgsProcessingParameterDateTime(self.START_TIME, self.tr('Time of departure')))
-        self.addParameter(QgsProcessingParameterFileDestination(self.GRIB_OUTPUT, self.tr('Grib Output file')))
+        self.addParameter(QgsProcessingParameterFileDestination(self.GRIB_OUTPUT, self.tr('Grib Output file'), fileFilter="*.grb"))
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
         # algorithm is run in QGIS).
