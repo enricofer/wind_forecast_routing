@@ -4,7 +4,7 @@
 
 [general]
 name=Routing by wind forecast
-qgisMinimumVersion=3.0
+qgisMinimumVersion=3.16
 description=sailing routing by wind forecast
 version=0.1
 author=enrico ferreguti
