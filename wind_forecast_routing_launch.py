@@ -77,56 +77,64 @@ wind_models = [
         "context": "Global - ICON",
         "interval": '3',
         "days": '5',
-        "limits": None
+        "limits": None,
+        "resolution": 0.25
     },
     {
         "service": 'gfs_p25_',
         "context": "Global - GFS",
         "interval": '3',
         "days": '5',
-        "limits": None
+        "limits": None,
+        "resolution": 0.25
     },
     {
         "service": 'arpege_p50_',
         "context": "Global - ARPEGE",
         "interval": '3',
         "days": '4',
-        "limits": None
+        "limits": None,
+        "resolution": 0.5
     },
     {
         "service": 'icon_eu_p06_',
         "context": "Europe - ICON_EU",
         "interval": '1',
         "days": '5',
-        "limits": [-23.5, 29.5, 45.0, 70.5]
+        "limits": [-23.5, 29.5, 45.0, 70.5],
+        "resolution": 0.06
     },
     {
         "service": 'arpege_eu_p10_',
         "context": "Europe - ARPEGE_EU",
         "interval": '1',
         "days": '3',
-        "limits": [-32.0, 20.0, 42.0, 72.0]
+        "limits": [-32.0, 20.0, 42.0, 72.0],
+        "resolution": 0.1
     },
     {
         "service": 'nam_conus_12km_',
         "context": "North America - NAM_CONUS",
         "interval": '1',
         "days": '4',
-        "limits": [-152.879, 12.220, -49.416, 61.310]
+        "limits": [-152.879, 12.220, -49.416, 61.310],
+        "resolution": 0.1
     },
     {
         "service": 'nam_cacbn_12km_',
         "context": "Caribbean sea - NAM_CACBN",
         "interval": '1',
         "days": '4',
-        "limits": [-100.0, 0.138, -60.148, 30.054]
+        "limits": [-100.0, 0.138, -60.148, 30.054],
+        "resolution": 0.1
     },
     {
         "service": 'nam_pacific_12km_',
         "context": "Pacific ocean - NAM_PACIFIC",
         "interval": '1',
         "days": '4',
-        "limits": [-170.0, 8.133, -140.084, 32.973]
+        "limits": [-170.0, 8.133, -140.084, 32.973],
+        "resolution": 0.1
     },
 ]
 
@@ -247,8 +255,15 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
 
         track = ((start_point.y(), start_point.x()), (end_point.y(), end_point.x()))
         geo_context = QgsRectangle(start_point.x(),start_point.y(), end_point.x(),end_point.y())
-        track_dist = QgsPointXY(start_point.x(),start_point.y()).sqrDist(end_point.x(), end_point.y())
-        geo_context.grow( (track_dist/2 ) if track_dist < 1 else 0.5 ) #limit grow to 0.5 degree
+        track_dist = start_point.distance(end_point)
+        
+        if track_dist < 0.25:
+            feedback.reportError("Error: Track path length too short, must be almost 15 Nautical miles to obtain significant results", fatalError=True)
+            return {"ERROR": "Track path too short"}
+
+        grow = 0.5 if track_dist < 0.5 else track_dist
+        grow = 1 if grow > 1 else grow
+        geo_context.grow( track_dist/2  ) #limit grow to 0.5 degree
         output_context = self.parameterAsFileOutput(parameters, self.OUTPUT_CONTEXT, context)
         if self.allow_output:
             output_route = self.parameterAsOutputLayer(parameters, self.OUTPUT_ROUTE, context)
@@ -291,7 +306,6 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         rawReplyObject = manager.blockingGet(request)
         j = QJsonDocument.fromJson(rawReplyObject.content())
         replyObject = j.toVariant()
-        print (rawReplyObject.content())
         if replyObject["status"]:
 
             download_params = {
