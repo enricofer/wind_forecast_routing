@@ -97,20 +97,20 @@ wind_models = [
         "resolution": 0.5
     },
     {
-        "service": 'icon_eu_p06_',
-        "context": "Europe - ICON_EU",
-        "interval": '1',
-        "days": '5',
-        "limits": [-23.5, 29.5, 45.0, 70.5],
-        "resolution": 0.06
-    },
-    {
         "service": 'arpege_eu_p10_',
         "context": "Europe - ARPEGE_EU",
         "interval": '1',
         "days": '3',
         "limits": [-32.0, 20.0, 42.0, 72.0],
         "resolution": 0.1
+    },
+    {
+        "service": 'icon_eu_p06_',
+        "context": "Europe - ICON_EU",
+        "interval": '1',
+        "days": '5',
+        "limits": [-23.5, 29.5, 45.0, 70.5],
+        "resolution": 0.06
     },
     {
         "service": 'nam_conus_12km_',
@@ -306,6 +306,7 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         rawReplyObject = manager.blockingGet(request)
         j = QJsonDocument.fromJson(rawReplyObject.content())
         replyObject = j.toVariant()
+        print("replyObject", replyObject)
         if replyObject["status"]:
 
             download_params = {

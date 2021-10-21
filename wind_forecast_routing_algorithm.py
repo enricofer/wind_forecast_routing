@@ -149,6 +149,8 @@ class grib_sampler(Grib):
             destinationCrs = QgsCoordinateReferenceSystem(4326)
         transform = QgsCoordinateTransform(self.grib.crs(), destinationCrs, QgsProject.instance().transformContext())
         self.grib.updateTriangularMesh(transform)
+        metadata = self.grib.datasetGroupMetadata(self.grib.datasetIndexAtRelativeTime(QgsInterval(1),wind_idx))
+        print ("GRIB-METADATA",metadata.dataType(),metadata.isScalar(),metadata.isTemporal(),metadata.isVector())
         self.wind_idx = wind_idx
 
     def getWindAt(self, t, lat, lon):
