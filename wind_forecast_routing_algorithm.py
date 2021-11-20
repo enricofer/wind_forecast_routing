@@ -116,26 +116,11 @@ class in_sea_checker:
         return res
         #return True
 
-
-def heading(y,x):
+def heading(x,y):
     a = math.degrees(math.atan2(y,x))
     if a<0:
         a = 360 + a
-    return (a + 360) % 360
-
-def reduce360 (alfa):
-	if math.isnan (alfa):
-		return 0.0
-		
-	n=int(alfa*0.5/math.pi)
-	n=math.copysign(n,1)
-	if alfa>2.0*math.pi:
-		alfa=alfa-n*2.0*math.pi
-	if alfa<0:
-		alfa=(n+1)*2.0*math.pi+alfa
-	if alfa>2.0*math.pi or alfa<0:
-		return 0.0
-	return alfa
+    return (90 - a + 360) % 360
 
 class grib_sampler(Grib):
     """ 
@@ -162,7 +147,6 @@ class grib_sampler(Grib):
             interval = self.grib.datasetIndexAtRelativeTime (interval, self.wind_idx) 
             wind_value = self.grib.datasetValue(interval, lon_lat)
             twd = math.radians(heading(wind_value.y(), wind_value.x()))
-            #twd = math.degrees(reduce360(math.atan2( wind_value.y(),wind_value.x())+math.pi))
             tws = wind_value.scalar()#*1.943844
             return (twd,tws)
         else:
