@@ -6,11 +6,12 @@
 name=Routing by wind forecast
 qgisMinimumVersion=3.16
 description=sailing routing by wind forecast
-version=0.1
-author=enrico ferreguti
+version=1.0
+author=Enrico Ferreguti, Paolo Cavallini, Davide Gessa
 email=enricofer@gmail.com
 
 about=A routing method to plan sailing based on wind speed and direction, and specific performances of a boat.
+  Built upon libweatherrout library: https://github.com/dakk/libweatherrouting
 
 tracker=https://github.com/enricofer/wind_forecast_routing/issues
 repository=https://github.com/enricofer/wind_forecast_routing
