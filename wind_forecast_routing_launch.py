@@ -172,7 +172,6 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         Here we define the inputs and output of the algorithm, along
         with some other properties.
         """
-        print ("CONFIG LAUNCH", config)
         if "nooutput" in config:
             self.allow_output = False
         else:
@@ -191,7 +190,6 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         for wm in wind_models:
             wind_models_labels.append(wm["context"])
 
-        print (wind_models_labels)
         # We add the input vector features source. It can have any kind of
         # geometry.
         self.addParameter(QgsProcessingParameterEnum(self.MODEL, 'Wind Model', options=wind_models_labels, defaultValue=0, allowMultiple=False))
@@ -275,7 +273,6 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
 
 
         model = self.parameterAsEnum(parameters, self.MODEL, context)
-        print (model)
         wind_model_def = None
         if model == 0:
             for wm in wind_models:
@@ -306,7 +303,6 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         rawReplyObject = manager.blockingGet(request)
         j = QJsonDocument.fromJson(rawReplyObject.content())
         replyObject = j.toVariant()
-        print("replyObject", replyObject)
         if replyObject["status"]:
 
             download_params = {
@@ -314,7 +310,6 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
                 'OUTPUT': grib_output
             }
 
-            print ("download_params:",download_params)
             output_download = processing.run('native:filedownloader', download_params, context=context, feedback=feedback, is_child_algorithm=True)
         else:
             print ("ERROR", replyObject)
@@ -341,9 +336,7 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
             "extent": QgsMeshLayer(output_download['OUTPUT'],"grib","mdal").extent(),
             "Inverted_clip": output_context
         }
-        print ("context_land_params", context_land_params)
         context_land_results = processing.run('sailtools:inverted_clip', context_land_params, context=context, feedback=feedback, is_child_algorithm=True)
-        print ("context_land_results", context_land_results)
         self.output_routing[self.OUTPUT_CONTEXT] = context_land_results['OUTPUT']
         
         self.output_routing["elab_name"] = "wind routing %s %s %s %.2f,%.1f,%.1f,%.1f" % (

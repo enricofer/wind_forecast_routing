@@ -141,13 +141,13 @@ class grib_sampler(Grib):
     def getWindAt(self, t, lat, lon):
         """ Returns (twd, tws) for the given point (lat, lon) at time t """
         if t >= self.start_time and t<=self.end_time: 
-            delta = t - self.start_time #self.grib.dataProvider().temporalCapabilities().referenceTime().toPyDateTime()
+            delta = t - self.start_time 
             interval = QgsInterval(delta.total_seconds())
             lon_lat = QgsPointXY(lon, lat)
             interval = self.grib.datasetIndexAtRelativeTime (interval, self.wind_idx) 
             wind_value = self.grib.datasetValue(interval, lon_lat)
             twd = math.radians( heading( wind_value.x(), wind_value.y() ) )
-            tws = wind_value.scalar()#*1.943844
+            tws = wind_value.scalar()
             return (twd,tws)
         else:
             print ("OUT_OF_RANGE", t, self.start_time, self.end_time)
@@ -231,7 +231,6 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         """
         grib_layerfile = self.parameterAsFile(parameters, self.GRIB, context)
         grib_layer = self.parameterAsLayer(parameters, self.GRIB, context)
-        print ("GRIB DETAILS:", grib_layerfile, grib_layer, grib_layer.id())
         wind_ds = self.parameterAsInt(parameters, self.WIND_DATASET_INDEX, context)
         polar_filename = self.polar_names[self.parameterAsEnum(parameters, self.POLAR, context)]
         polar = Polar(os.path.join(self.polars_dir,self.polars[polar_filename]))
@@ -239,19 +238,12 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         start_point = self.parameterAsPoint(parameters, self.START_POINT, context, crs=grib_layer.crs())
         end_point = self.parameterAsPoint(parameters, self.END_POINT, context, crs=grib_layer.crs())
 
-        print ("parameters", parameters)
-
         track = ((start_point.y(), start_point.x()), (end_point.y(), end_point.x()))
         geo_context = QgsRectangle(start_point.x(),start_point.y(), end_point.x(),end_point.y())
         track_dist = QgsPointXY(start_point.x(),start_point.y()).sqrDist(end_point.x(), end_point.y())
         geo_context.grow( (track_dist/2 ) if track_dist < 1 else 0.5 ) #limit grow to 0.5 degree
         checkValidity = in_sea_checker(geo_context)
         grib_reader = grib_sampler(grib_layer,wind_ds)
-
-        #test
-        #print ("TESTGRIB",grib_reader.getWindAt(datetime.strptime("02/02/21 18:00", "%d/%m/%y %H:%M"),39.31064,5.06086))
-
-        print ("track", track)
 
         route_process =  Routing(LinearBestIsoRouter, polar, track, grib_reader, start.toPyDateTime(), lineValidity = checkValidity.path_in_sea_xy,)
         step = 1
@@ -289,7 +281,6 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
             if execution == "ok":
                 tr.append((*track[-1], dateutil.parser.parse(tr[-1][2])+timedelta(hours=1), 0, 0, 0, 0))
             
-            print (tr)
             route_polyline = []
 
 
