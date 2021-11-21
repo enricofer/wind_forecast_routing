@@ -146,7 +146,7 @@ class grib_sampler(Grib):
             lon_lat = QgsPointXY(lon, lat)
             interval = self.grib.datasetIndexAtRelativeTime (interval, self.wind_idx) 
             wind_value = self.grib.datasetValue(interval, lon_lat)
-            twd = math.radians(heading(wind_value.y(), wind_value.x()))
+            twd = math.radians( heading( wind_value.x(), wind_value.y() ) )
             tws = wind_value.scalar()#*1.943844
             return (twd,tws)
         else:
