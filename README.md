@@ -14,7 +14,6 @@ The plugin will be shown under ``Plugins`` menu: ``Wind forecast routing``.
 To generate an optimal route you just need to activate the plugin, choose the parameters, and press ``Run``. The plugin will download the wind model cosen for the area of interest, and will calculate the fastes track.
 Please double check that:
 * your start and end point fall outside land masses; currently the plugin uses a rough coastline (natural earth `ne_10m_ocean`, you can find it in the plugin source directory)
-* the GRIB has the correct projection (EPSG:4326); if not, assign it by hand
 * if your layer is not shown, deactivate the time panel.
 
 Please report any issue on the bugrtracker.
