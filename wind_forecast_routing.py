@@ -38,7 +38,7 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtWidgets import QAction, QMainWindow, QDockWidget, QMenu
 
-from qgis.core import QgsProcessingAlgorithm, QgsApplication, QgsProject, QgsMeshLayer, QgsMeshDatasetIndex, QgsVectorLayer, QgsLayerTreeLayer
+from qgis.core import QgsProcessingAlgorithm, QgsApplication, QgsProject, QgsMeshLayer, QgsMeshDatasetIndex, QgsVectorLayer, QgsLayerTreeLayer,QgsCoordinateReferenceSystem
 from processing import execAlgorithmDialog, createAlgorithmDialog
 from .wind_forecast_routing_provider import windForecastRoutingProvider
 
@@ -213,10 +213,16 @@ class windForecastRoutingPlugin(object):
         if results:
             print ("FINAL",results)
 
+            #force project to wgs84
+            #QgsProject.instance().setCrs(QgsCoordinateReferenceSystem(4326))
+
             legendRoot = QgsProject.instance().layerTreeRoot()
             routinggroup = legendRoot.insertGroup(0, results["elab_name"])
 
+            #force meshlayer to wgs84
             meshLayer = QgsMeshLayer(results['GRIB_OUTPUT'],"grib",'mdal')
+            meshLayer.setCrs(QgsCoordinateReferenceSystem(4326))
+
             dp = meshLayer.dataProvider()
             gprCount = dp.datasetGroupCount()
             for i in range(gprCount):
