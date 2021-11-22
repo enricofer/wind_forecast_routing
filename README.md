@@ -1,6 +1,8 @@
 # Wind forecast routing
 ![demo](/doc/demo.gif)
 
+## Credits
+
 The plugin is based on [libweatherrouting routing library](https://github.com/dakk/libweatherrouting/) ©2021 Davide Gessa, Riccardo Apolloni, Enrico Ferreguti
 
 The grib models are provided by https://opengribs.org
