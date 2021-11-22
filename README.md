@@ -1,5 +1,5 @@
 # Wind forecast routing
-![demo](.\doc\demo.gif)
+![demo](/doc/demo.gif)
 
 The plugin is based on [libweatherrouting routing library](https://github.com/dakk/libweatherrouting/) ©2021 Davide Gessa, Riccardo Apolloni, Enrico Ferreguti
 
@@ -34,7 +34,7 @@ The polar files are provided by https://www.seapilot.com
 
 - At the and of calculation press  ``Close`` and Enjoy results.
 
-  | ![01](.\doc\capture_001.jpg) | ![02](.\doc\capture_002.jpg) |
+  | ![01](doc/capture_001.jpg) | ![02](doc/capture_002.jpg) |
   | ------------------------ | ------------------------ |
   |                          |                          |
 
