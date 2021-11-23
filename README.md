@@ -42,7 +42,7 @@ The polar files are provided by https://www.seapilot.com
 
 Please keep in mind that:
 
-* currently the plugin uses a rough coastline (natural earth `ne_10m_ocean`, you can find it in the plugin source directory), avoid tracks crossing complex geographical context to prevent issues in algorithm calculation due to lack of solutions within the temporal of geographical grib scope
+* currently the plugin uses a rough coastline (natural earth `ne_10m_ocean`, you can find it in the plugin source directory), avoid tracks crossing complex geographical context to prevent issues in algorithm calculation due to lack of solutions within the temporal or geographical grib scope
 * Furthermore avoid too far start and end points. Tracks longer than 300 - 400 nautical miles could bring algorithm outside downloaded grib scope and cause processing exceptions.
 * Even too short tracks, closer than 20-30 nautical miles, could cause algorithm exception.
 * the output layers are set up for temporal display. Check the Temporal panel settings for correct time/location visualization.
