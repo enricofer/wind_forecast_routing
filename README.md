@@ -1,5 +1,7 @@
 # Wind forecast routing
-![](doc\demo.gif)
+![demo](/doc/demo.gif)
+
+## Credits
 
 The plugin is based on [libweatherrouting routing library](https://github.com/dakk/libweatherrouting/) ©2021 Davide Gessa, Riccardo Apolloni, Enrico Ferreguti
 
@@ -34,14 +36,15 @@ The polar files are provided by https://www.seapilot.com
 
 - At the and of calculation press  ``Close`` and Enjoy results.
 
-  | ![](doc\capture_001.jpg) | ![](doc\capture_002.jpg) |
+  | ![01](doc/capture_001.jpg) | ![02](doc/capture_002.jpg) |
   | ------------------------ | ------------------------ |
   |                          |                          |
 
 Please keep in mind that:
 
-* currently the plugin uses a rough coastline (natural earth `ne_10m_ocean`, you can find it in the plugin source directory), avoid tracks between complex geographical context to prevent pitfalls in algorithm calculation that could not bring to solutions within the temporal of geographical grib scope
-* Furthermore avoid too far start and end points. Tracks longer than 500 - 750 nautical miles could bring algorithm outside downloaded grib scope and cause processing exceptions.
+* currently the plugin uses a rough coastline (natural earth `ne_10m_ocean`, you can find it in the plugin source directory), avoid tracks crossing complex geographical context to prevent issues in algorithm calculation due to lack of solutions within the temporal or geographical scope of grib model
+* Furthermore avoid too far start and end points. Tracks longer than 300 - 400 nautical miles could bring algorithm outside downloaded grib scope and cause processing exceptions.
+* Even too short tracks, closer than 20-30 nautical miles, could cause algorithm exception.
 * the output layers are set up for temporal display. Check the Temporal panel settings for correct time/location visualization.
 
 Please report any issue on the [bugtracker](https://github.com/enricofer/wind_forecast_routing/issues).
