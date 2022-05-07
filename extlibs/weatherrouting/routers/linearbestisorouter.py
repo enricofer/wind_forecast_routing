@@ -51,7 +51,7 @@ class LinearBestIsoRouter (Router):
 			for p in isoc[-1]:
 				distance_to_end_point = utils.pointDistance (end[0],end[1], p[0], p[1])
 				if distance_to_end_point < self.getParamValue('minIncrease'):
-					(twd,tws) = self.grib.getWindAt (time + datetime.timedelta(hours=1), p[0], p[1])
+					#(twd,tws) = self.grib.getWindAt (time + datetime.timedelta(hours=1), p[0], p[1])
 					maxReachDistance = utils.maxReachDistance(p, p[6])
 					if utils.pointDistance (end[0],end[1], p[0], p[1]) < abs(maxReachDistance*1.1):
 						if (not self.pointValidity or self.pointValidity(end[0],end[1])) and (not self.lineValidity or self.lineValidity(end[0],end[1], p[0], p[1])):

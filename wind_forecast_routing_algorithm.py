@@ -146,8 +146,11 @@ class grib_sampler(Grib):
             lon_lat = QgsPointXY(lon, lat)
             interval = self.grib.datasetIndexAtRelativeTime (interval, self.wind_idx) 
             wind_value = self.grib.datasetValue(interval, lon_lat)
-            twd = math.radians( heading( wind_value.x(), wind_value.y() ) )
+            wind_x = 0 - wind_value.x()
+            wind_y = 0 - wind_value.y()
+            twd = math.radians( heading( wind_x, wind_y) )
             tws = wind_value.scalar()
+            #print (lon, lat,wind_value.x(), wind_value.y(),wind_x,wind_y,twd,tws)
             return (twd,tws)
         else:
             print ("OUT_OF_RANGE", t, self.start_time, self.end_time)
@@ -272,6 +275,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
 
             # Compute the number of steps to display within the progress bar and
             # get features from source
+            print (res.path)
             tr = []
             for wp in res.path:
                 if len(wp) == 3:
@@ -286,7 +290,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
 
             for order,wayp in enumerate(tr):
                 # Stop the algorithm if cancel button has been clicked
-                print (wayp[1],wayp[0],wayp[2])
+                print (wayp)
                 if feedback.isCanceled():
                     break
                 print (wayp[2], type(wayp[2]))
