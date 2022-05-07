@@ -15,12 +15,12 @@ GNU General Public License for more details.
 
 For detail about GNU see <http://www.gnu.org/licenses/>.
 '''
-
+from typing import Tuple 
+from io import FileIO
 import math
-from . import utils
 
 class Polar:
-	def __init__ (self, polarPath, f = None):
+	def __init__ (self, polarPath: str, f: FileIO = None):
 		"""
 		Parameters
 		----------
@@ -44,19 +44,19 @@ class Polar:
 
 		line = f.readline ()
 		while line != "":
-			dato = line.split ()
-			twa = float (dato[0])
+			data = line.split ()
+			twa = float (data[0])
 			self.twa.append (math.radians (twa))
 			speedline = []
-			for i in range (1,len (dato)):
-				speed = float (dato[i])
+			for i in range (1,len (data)):
+				speed = float (data[i])
 				speedline.append (speed)
 			self.speedTable.append (speedline)
 			line = f.readline ()
 		f.close ()
 
 
-	def getSpeed (self, tws, twa):
+	def getSpeed (self, tws: float, twa: float) -> float:
 		""" Returns the speed (in knots) given tws (in knots) and twa (in radians) """
 		
 		tws1 = 0
@@ -67,7 +67,7 @@ class Polar:
 		for k in range(len(self.tws) - 1, 0, -1):
 			if tws <= self.tws[k]:
 				tws2 = k
-		if tws1 > tws2:#caso di tws oltre i valori in tabella
+		if tws1 > tws2: # TWS over table limits
 			tws2 = len(self.tws) - 1
 		twa1 = 0
 		twa2 = 0
@@ -96,7 +96,7 @@ class Polar:
 		return speed
 		
 
-	def getReaching(self,tws):
+	def getReaching(self, tws: float) -> Tuple[float, float]:
 		maxspeed = 0
 		twamaxspeed = 0
 		for twa in range(0,181):
@@ -108,7 +108,7 @@ class Polar:
 		return (maxspeed, twamaxspeed)
 
 
-	def getMaxVMGTWA(self,tws,twa):
+	def getMaxVMGTWA(self, tws: float, twa: float) -> Tuple[float, float]:
 		if not ((tws, twa) in self.vmgdict):
 			twamin = max(0, twa-math.pi/2)
 			twamax = min(math.pi, twa+math.pi/2)
@@ -125,17 +125,17 @@ class Polar:
 		return self.vmgdict[(tws, twa)]
 
 
-	def getMaxVMGUp(self,tws):
+	def getMaxVMGUp(self, tws: float) -> Tuple[float, float]:
 		vmguptupla = self.getMaxVMGTWA(tws, 0)
 		return (vmguptupla[0], vmguptupla[1])
 
 
-	def getMaxVMGDown(self,tws):
+	def getMaxVMGDown(self, tws: float) -> Tuple[float, float]:
 		vmgdowntupla = self.getMaxVMGTWA(tws, math.pi)
 		return (-vmgdowntupla[0], vmgdowntupla[1])
 
 
-	def getRoutageSpeed(self,tws,twa):
+	def getRoutageSpeed(self, tws, twa) -> float:
 		UP = self.getMaxVMGUp(tws)
 		vmgup = UP[0]
 		twaup = UP[1]
@@ -154,7 +154,7 @@ class Polar:
 		return v
 
 
-	def getTWARoutage(self,tws,twa):
+	def getTWARoutage(self, tws: float, twa: float) -> float:
 		UP = self.getMaxVMGUp(tws)
 		vmgup = UP[0]
 		twaup = UP[1]

@@ -246,6 +246,11 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
         track_dist = QgsPointXY(start_point.x(),start_point.y()).sqrDist(end_point.x(), end_point.y())
         geo_context.grow( (track_dist/2 ) if track_dist < 1 else 0.5 ) #limit grow to 0.5 degree
         checkValidity = in_sea_checker(geo_context)
+
+        if not (checkValidity.point_in_sea_xy(end_point.y(), end_point.x()) and checkValidity.point_in_sea_xy(start_point.y(), start_point.x())):
+            feedback.reportError("Error: start and end track points must lay on sea")
+            return {"result":"start and end track points must lay on sea"}
+
         grib_reader = grib_sampler(grib_layer,wind_ds)
 
         route_process =  Routing(LinearBestIsoRouter, polar, track, grib_reader, start.toPyDateTime(), lineValidity = checkValidity.path_in_sea_xy,)
@@ -263,7 +268,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
                 if res.time > grib_reader.end_time:
                     execution = "terminated: out of grib temporal scope"
             except Exception as e:
-                feedback.pushInfo("Error: %s" % e.message)
+                feedback.reportError("Error: %s" % e.message)
 
         if res.path:
             waypfields, routefields = get_routing_fields()
@@ -320,7 +325,8 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
                 "result": execution
             }
         else:
-            return {"result", "no_path"}
+            feedback.reportError("Error: no solution for the specified track/departure time. Outside grib scope")
+            return {"result", "no solution for the specified track/departure time. Outside grib scope"}
 
     def name(self):
         """

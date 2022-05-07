@@ -6,7 +6,7 @@
 name=Routing by wind forecast
 qgisMinimumVersion=3.16
 description=sailing routing by wind forecast
-version=1.0
+version=1.2
 author=Enrico Ferreguti, Paolo Cavallini, Davide Gessa
 email=enricofer@gmail.com
 
@@ -21,7 +21,7 @@ repository=https://github.com/enricofer/wind_forecast_routing
 
 hasProcessingProvider=yes
 # Uncomment the following line and add your changelog:
-# changelog=
+# changelog=1.2 inverted twd direction sample issue fixed
 
 # Tags are comma separated with spaces allowed
 tags=python

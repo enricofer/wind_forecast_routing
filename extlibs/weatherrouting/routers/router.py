@@ -85,7 +85,7 @@ class Router:
 	def calculateIsochrones (self, t, isocrone, nextwp):
 		""" Calculate isochrones depending on routageSpeed from polar """
 		def pointF(p, tws, twa, dt, brg):
-			speed = self.polar.getRoutageSpeed (tws, math.copysign (twa,1))
+			speed = self.polar.getSpeed (tws, math.copysign (twa,1))
 			return utils.routagePointDistance (p[0], p[1], speed * dt * utils.NAUTICAL_MILE_IN_KM, brg), speed
 
 		return self._calculateIsochrones(t, isocrone, nextwp, pointF)
@@ -109,13 +109,14 @@ class Router:
 
 			for twa in range(-180,180,5):
 				twa = math.radians(twa)
-				brg = utils.reduce360(twd+twa)
+				brg = utils.reduce360(twd + twa)
 
 				# Calculate next point
 				ptoiso, speed = pointF(p, tws, twa, dt, brg)
 				
 				if utils.pointDistance (ptoiso[0], ptoiso[1], nextwp[0], nextwp[1]) >= utils.pointDistance (p[0], p[1], nextwp[0], nextwp[1]):
 				 	continue
+				
 				if self.pointValidity:
 					if not self.pointValidity (ptoiso[0], ptoiso[1]):
 						continue
@@ -158,10 +159,10 @@ class Router:
 		return isocrone
 
 
-	def calculateVMG (self, speed, angle, start, end):
+	def calculateVMG (self, speed, angle, start, end) -> float:
 		""" Calculates the Velocity-Made-Good of a boat sailing from start to end at current speed / angle """
 		return speed * math.cos (angle)
 
 
-	def route (self, lastlog, t, start, end):
+	def route (self, lastlog, t, start, end) -> RoutingResult:
 		raise (Exception("Not implemented"))
