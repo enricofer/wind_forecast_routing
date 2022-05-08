@@ -248,6 +248,7 @@ class windForecastRoutingPlugin(object):
             s.setActiveScalarDatasetGroup(i)
             meshLayer.setRendererSettings(s)
             QgsProject.instance().addMapLayer(meshLayer, False)
+            meshLayer.loadNamedStyle(os.path.join(self.plugin_dir,"grib.qml"))
             routinggroup.insertChildNode(0, QgsLayerTreeLayer(meshLayer))
 
             contextlayer = QgsVectorLayer(results['OUTPUT_CONTEXT'], "context", "ogr")
