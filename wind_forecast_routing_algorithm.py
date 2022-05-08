@@ -295,14 +295,16 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
 
             for order,wayp in enumerate(tr):
                 # Stop the algorithm if cancel button has been clicked
-                print (wayp)
                 if feedback.isCanceled():
                     break
-                print (wayp[2], type(wayp[2]))
                 new_feat = QgsFeature(waypfields)
                 new_feat.setAttribute('wayp_id', order)
                 new_feat.setAttribute('timestamp', str(wayp[2])[:25]) #.isoformat(timespec='minutes')
                 new_feat.setAttribute('time', str(wayp[2]))
+                if order == 0:
+                    route_start_time = dateutil.parser.parse(str(wayp[2]))
+                else:
+                    route_end_time = dateutil.parser.parse(str(wayp[2]))
                 new_feat.setAttribute('twd', math.degrees(wayp[3]))
                 new_feat.setAttribute('tws', wayp[4])
                 new_feat.setAttribute('knots', wayp[5])
@@ -311,7 +313,7 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
                 route_polyline.append(waypoint)
                 new_geom = QgsGeometry.fromPointXY(waypoint)
                 new_feat.setGeometry(new_geom)
-                print ("write sink_waypoints:",sink_waypoints.addFeature(new_feat, QgsFeatureSink.FastInsert))
+                sink_waypoints.addFeature(new_feat, QgsFeatureSink.FastInsert)
 
             new_route_feat = QgsFeature(routefields)
             new_route_feat.setAttribute('start_tracking', tr[0][2][:25])
@@ -322,6 +324,8 @@ class windForecastRoutingAlgorithm(QgsProcessingAlgorithm):
             return {
                 self.OUTPUT_WAYPOINTS: dest_waypoints_id,
                 self.OUTPUT_ROUTE: dest_route_id,
+                "route_start_time": route_start_time,
+                "route_end_time": route_end_time,
                 "result": execution
             }
         else:

@@ -30,6 +30,7 @@ __copyright__ = '(C) 2021 by enrico ferreguti'
 
 __revision__ = '$Format:%H$'
 
+from datetime import datetime,timedelta
 import os
 import sys
 import inspect
@@ -38,7 +39,17 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtWidgets import QAction, QMainWindow, QDockWidget, QMenu
 
-from qgis.core import QgsProcessingAlgorithm, QgsApplication, QgsProject, QgsMeshLayer, QgsMeshDatasetIndex, QgsVectorLayer, QgsLayerTreeLayer,QgsCoordinateReferenceSystem
+from qgis.core import (
+    QgsDateTimeRange, 
+    QgsTemporalNavigationObject,
+    QgsApplication, 
+    QgsProject, 
+    QgsMeshLayer, 
+    QgsMeshDatasetIndex, 
+    QgsVectorLayer, 
+    QgsLayerTreeLayer,
+    QgsCoordinateReferenceSystem
+)
 from processing import execAlgorithmDialog, createAlgorithmDialog
 from .wind_forecast_routing_provider import windForecastRoutingProvider
 
@@ -253,6 +264,17 @@ class windForecastRoutingPlugin(object):
             waypointslayer.loadNamedStyle(os.path.join(self.plugin_dir,"waypoint.qml"))
             QgsProject.instance().addMapLayer(waypointslayer, False)
             routinggroup.insertChildNode(0, QgsLayerTreeLayer(waypointslayer))
+
+            tc_start = results["route_start_time"] - timedelta(minutes=5)
+            tc_end = results["route_end_time"] + timedelta(minutes=55)
+            tc = self.iface.mapCanvas().temporalController()
+            tc.setTemporalExtents(QgsDateTimeRange(tc_start,tc_end))
+            tc.rewindToStart()
+            if results["ANIMATION"]:
+                tc.setNavigationMode(QgsTemporalNavigationObject.Animated)
+                tc.playForward()
+            else:
+                tc.setNavigationMode(QgsTemporalNavigationObject.NavigationOff)
 
     
     def ex_launch_routing(self):

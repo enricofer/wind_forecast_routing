@@ -166,6 +166,7 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
     OUTPUT_CONTEXT = 'OUTPUT_CONTEXT'
     MODEL = 'MODEL'
     FORCE_LOAD_RESULTS = 'FORCE_LOAD_RESULTS'
+    ANIMATION = 'ANIMATION'
 
     def initAlgorithm(self, config):
         """
@@ -197,6 +198,7 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterPoint(self.START_POINT, self.tr('Start point')))
         self.addParameter(QgsProcessingParameterPoint(self.END_POINT, self.tr('End point')))
         self.addParameter(QgsProcessingParameterDateTime(self.START_TIME, self.tr('Time of departure')))
+        self.addParameter(QgsProcessingParameterBoolean(self.ANIMATION, self.tr('Animate route with temporal controller at the end of algorithm processing'), defaultValue=False))
         self.addParameter(QgsProcessingParameterFileDestination(self.GRIB_OUTPUT, self.tr('Grib Output file'), fileFilter="*.grb"))
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
@@ -250,6 +252,7 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         start_point = self.parameterAsPoint(parameters, self.START_POINT, context, crs=grib_crs)
         end_point = self.parameterAsPoint(parameters, self.END_POINT, context, crs=grib_crs)
         grib_output = self.parameterAsFile(parameters, self.GRIB_OUTPUT, context)
+        animation = self.parameterAsBool(parameters, self.ANIMATION, context)
 
         track = ((start_point.y(), start_point.x()), (end_point.y(), end_point.x()))
         geo_context = QgsRectangle(start_point.x(),start_point.y(), end_point.x(),end_point.y())
@@ -329,6 +332,7 @@ class windForecastLaunchAlgorithm(QgsProcessingAlgorithm):
         self.output_routing = processing.run('sailtools:windrouting', routing_params, context=context, feedback=feedback, is_child_algorithm=True)
 
         self.output_routing[self.GRIB_OUTPUT] = output_download['OUTPUT']
+        self.output_routing[self.ANIMATION] = animation
 
         global_oceans_layer = QgsVectorLayer(os.path.join(os.path.dirname(__file__),"ne_10m_ocean.zip"), "context", "ogr")
         context_land_params = {
