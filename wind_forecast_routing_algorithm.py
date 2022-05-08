@@ -92,7 +92,6 @@ class in_sea_checker:
             }
             print (alg_params)
             output_clip = processing.run('native:extractbyextent', alg_params)
-            QgsProject.instance().addMapLayer(output_clip['OUTPUT'])
             self.sea_layer = output_clip['OUTPUT']
         else:
             self.sea_layer = QgsVectorLayer(local_sea_layer_file, "sea", 'ogr')
