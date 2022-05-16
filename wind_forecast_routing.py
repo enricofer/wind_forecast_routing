@@ -38,6 +38,7 @@ import inspect
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtWidgets import QAction, QMainWindow, QDockWidget, QMenu
+from qgis.PyQt.QtXml import QDomDocument
 
 from qgis.core import (
     QgsDateTimeRange, 
@@ -48,8 +49,11 @@ from qgis.core import (
     QgsMeshDatasetIndex, 
     QgsVectorLayer, 
     QgsLayerTreeLayer,
-    QgsCoordinateReferenceSystem
+    QgsCoordinateReferenceSystem,
+    QgsMeshDataProviderTemporalCapabilities,
+    QgsReadWriteContext
 )
+
 from processing import execAlgorithmDialog, createAlgorithmDialog
 from .wind_forecast_routing_provider import windForecastRoutingProvider
 
@@ -234,6 +238,8 @@ class windForecastRoutingPlugin(object):
             meshLayer = QgsMeshLayer(results['GRIB_OUTPUT'],"grib",'mdal')
             meshLayer.setCrs(QgsCoordinateReferenceSystem(4326))
 
+            print("0",meshLayer.temporalProperties().isActive())
+
             dp = meshLayer.dataProvider()
             gprCount = dp.datasetGroupCount()
             for i in range(gprCount):
@@ -242,6 +248,13 @@ class windForecastRoutingPlugin(object):
                 name = meta.name()
                 if isVector:
                     break
+            
+            ctx =  QgsReadWriteContext()
+            doc = QDomDocument("testdoc")
+            elem_bak = doc.createElement("temporalProps")
+            meshLayer.temporalProperties().writeXml(elem_bak, doc, ctx)
+
+            print("1",meshLayer.temporalProperties().isActive())
 
             s = meshLayer.rendererSettings()
             s.setActiveVectorDatasetGroup(i) #QgsMeshDatasetIndex(i, 0)
@@ -276,6 +289,9 @@ class windForecastRoutingPlugin(object):
                 tc.playForward()
             else:
                 tc.setNavigationMode(QgsTemporalNavigationObject.NavigationOff)
+
+            meshLayer.temporalProperties().readXml(elem_bak, ctx)
+            meshLayer.reload()
 
     
     def ex_launch_routing(self):
