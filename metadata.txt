@@ -22,6 +22,8 @@ repository=https://github.com/enricofer/wind_forecast_routing
 hasProcessingProvider=yes
 # Uncomment the following line and add your changelog:
 # changelog=1.2 inverted twd direction sample issue fixed
+  mesh layer styled as windy color ramp (https://community.windy.com/topic/7233/wind-colors-for-sailors-and-for-everyone)
+  temporal controller support
 
 # Tags are comma separated with spaces allowed
 tags=python
