@@ -32,6 +32,8 @@ The polar files are provided by https://www.seapilot.com
 
 - optionally specify grib, waypoints and route files location (otherwise the plugin will place the files in system temporary directory)
 
+- check **Animate route with temporal controller at the end of algorithm processing** control whether temporal capabilities should be activated to improve results visualization
+
 - Perform routing with ``Run``. The plugin will download the wind model chosen for the area of interest, and will calculate the fastest route.
 
 - At the and of calculation press  ``Close`` and Enjoy results.
